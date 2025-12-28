@@ -1,13 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Upload, Loader, Download, Trash2 } from 'lucide-react';
 import AudioUploader from './components/AudioUploader';
 import TranscriptionResults from './components/TranscriptionResults';
 import { useTranscription } from './hooks/useTranscription';
+import { pipeline } from '@xenova/transformers';
 
 function App() {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
   const { transcription, isProcessing, progress, error, processAudio, clearResults } = useTranscription();
+
+  useEffect(() => {
+    const initializeModels = async () => {
+      try {
+        setIsLoading(true);
+        await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny');
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Ошибка загрузки моделей:', err);
+        setIsLoading(false);
+      }
+    };
+    initializeModels();
+  }, []);
 
   const handleFileSelect = async (file: File) => {
     setAudioFile(file);
@@ -62,9 +78,19 @@ function App() {
           <p className="text-gray-400 text-lg">Транскрибация аудио с диаризацией - полностью офлайн</p>
         </header>
 
+        {isLoading && (
+          <div className="max-w-4xl mx-auto mb-8">
+            <div className="bg-slate-700 rounded-lg p-8 border border-slate-600 text-center">
+              <Loader className="w-8 h-8 text-blue-400 animate-spin mx-auto mb-4" />
+              <p className="text-white">Загрузка моделей распознавания речи...</p>
+              <p className="text-gray-400 text-sm mt-2">Это может занять некоторое время при первом запуске</p>
+            </div>
+          </div>
+        )}
+
         <div className="max-w-4xl mx-auto space-y-8">
           {!audioFile ? (
-            <AudioUploader onFileSelect={handleFileSelect} />
+            <AudioUploader onFileSelect={handleFileSelect} disabled={isLoading} />
           ) : (
             <div className="bg-slate-700 rounded-lg p-8 border border-slate-600">
               <div className="space-y-6">

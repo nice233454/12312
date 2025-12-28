@@ -3,9 +3,10 @@ import { Upload, Music } from 'lucide-react';
 
 interface AudioUploaderProps {
   onFileSelect: (file: File) => void;
+  disabled?: boolean;
 }
 
-export default function AudioUploader({ onFileSelect }: AudioUploaderProps) {
+export default function AudioUploader({ onFileSelect, disabled }: AudioUploaderProps) {
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -18,6 +19,7 @@ export default function AudioUploader({ onFileSelect }: AudioUploaderProps) {
   };
 
   const handleDrop = (e: React.DragEvent) => {
+    if (disabled) return;
     e.preventDefault();
     setIsDragOver(false);
     const files = e.dataTransfer.files;
@@ -42,7 +44,9 @@ export default function AudioUploader({ onFileSelect }: AudioUploaderProps) {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={`border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 ${
-        isDragOver
+        disabled
+          ? 'border-slate-600 bg-slate-800/50 opacity-50 cursor-not-allowed'
+          : isDragOver
           ? 'border-cyan-400 bg-cyan-500/10'
           : 'border-slate-600 bg-slate-700/50 hover:border-cyan-500/50'
       }`}
@@ -54,13 +58,18 @@ export default function AudioUploader({ onFileSelect }: AudioUploaderProps) {
         <div>
           <h2 className="text-2xl font-bold text-white mb-2">Загрузите аудиофайл</h2>
           <p className="text-gray-400 mb-4">Поддерживаются форматы: MP3, WAV, OGG, WebM</p>
-          <label className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg cursor-pointer transition duration-300">
+          <label className={`inline-flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-300 ${
+            disabled
+              ? 'opacity-50 cursor-not-allowed'
+              : 'hover:bg-blue-700 cursor-pointer'
+          }`}>
             <Upload className="w-5 h-5" />
             Выбрать файл
             <input
               type="file"
               accept="audio/*"
               onChange={handleFileInput}
+              disabled={disabled}
               className="hidden"
             />
           </label>
